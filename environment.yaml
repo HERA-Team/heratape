@@ -1,0 +1,14 @@
+name: heratape
+channels:
+  - conda-forge
+dependencies:
+  - alembic>=1.8
+  - astropy>=5.0.4
+  - coverage
+  - numpy>=1.23.*
+  - pip
+  - psycopg>=3.2.2
+  - pytest>=6.2.5
+  - pytest-cov
+  - setuptools_scm>=8.1
+  - sqlalchemy>=1.4.0

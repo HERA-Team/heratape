@@ -1,0 +1,101 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "setuptools_scm>=8.1", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "heratape"
+authors = [
+    {name = "Bryna Hazelton", email = "brynah@phys.washington.edu"},
+    {name = "Daniel Jacobs", email = "daniel.c.jacobs@gmail.com"},
+    {name = "Paul La Plante", email = "paul.laplante@unlv.edu"},
+]
+maintainers = [
+    {name = "Bryna Hazelton", email = "brynah@phys.washington.edu"},
+    {name = "Daniel Jacobs", email = "daniel.c.jacobs@gmail.com"},
+    {name = "Paul La Plante", email = "paul.laplante@unlv.edu"},
+]
+description = "Code to support archiving HERA data to tape."
+readme = "README.md"
+dynamic = ["version"]
+dependencies = [
+    "alembic>=1.8",
+    "astropy>=5.0.4",
+    "numpy>=1.23",
+    "psycopg>=3.2.2",
+    "setuptools_scm>=8.1",
+    "sqlalchemy>=2.0",
+]
+requires-python = ">=3.10"
+keywords = ["radio astronomy", "interferometry"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.2.0",
+    "pytest-cov",
+    "coverage",
+    "pre-commit",
+]
+doc = ["matplotlib", "pypandoc", "sphinx"]
+dev = ["pyuvdata[test,doc]"]
+
+[project.urls]
+Repository = "https://github.com/HERA-Team/heratape"
+
+[tool.setuptools_scm]
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+addopts = "--ignore=scripts --ignore=docs"
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "W", # pycodestyle warnings
+    "F", # Pyflakes
+    "D", # pydocstyle
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "A", # flake8-builtins
+    "C4", # flake8-comprehensions
+    "N", # pep8-naming
+    "SIM", # flake8-simplify
+    "I", # isort
+    # "C90", # McCabe complexity. Consider for the future
+]
+ignore = [
+    "B028", # no-explicit-stacklevel for warnings
+    "SIM108", # prefer ternary opperators. I find them difficult to read.
+    "D203", # one-blank-line-before-class. we use two.
+    "D212", # multi-line-summary-first-line. We put it on the second line.
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"] # Don't require docstrings for tests
+"docs/*.py" = ["D", "A"] # Don't require docstrings or worry about builtins for docs
+"setup.py" = ["D"] # Don't require docstrings for setup.py
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 88
+
+[tool.ruff.lint.mccabe]
+max-complexity = 30
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = ["heratape"]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
