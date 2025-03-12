@@ -1,5 +1,5 @@
 # Copyright (c) 2025 HERA-Team
-# Licensed under the MIT License
+# Licensed under the 2-clause BSD License
 """Database consistency checking functions."""
 
 from sqlalchemy import inspect

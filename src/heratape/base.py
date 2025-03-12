@@ -1,5 +1,5 @@
 # Copyright (c) 2025 HERA-Team
-# Licensed under the MIT License
+# Licensed under the 2-clause BSD License
 """Define the database base objects."""
 
 import json
