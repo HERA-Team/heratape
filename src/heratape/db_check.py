@@ -2,8 +2,30 @@
 # Licensed under the 2-clause BSD License
 """Database consistency checking functions."""
 
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
+
+
+def check_connection(session):
+    """
+    Check whether the database connection is live and responsive.
+
+    Parameters
+    ----------
+    session : SQLAlchemy session
+        Session to use to check the connection, bound to an engine.
+
+    Returns
+    -------
+    True if database responds to simple SQL query. Otherwise False.
+
+    """
+    result = True
+    try:
+        session.execute(text("SELECT 1"))
+    except OperationalError:
+        result = False
+    return result
 
 
 def is_valid_database(base, session):
