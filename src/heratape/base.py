@@ -10,7 +10,7 @@ from datetime import date
 import numpy as np
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import Session, declarative_base
 from sqlalchemy.orm.session import sessionmaker
 
 config_file = os.path.expanduser("~/.heratape/heratape_config.json")
@@ -112,7 +112,7 @@ class DB(metaclass=ABCMeta):  # noqa B024
     sessionmaker = sessionmaker()
     sqlalchemy_base = None
 
-    def __init__(self, db_url):  # noqa
+    def __init__(self, sqlalchemy_base, db_url):  # noqa
         self.sqlalchemy_base = Base
         self.engine = create_engine(db_url)
         self.sessionmaker.configure(bind=self.engine)
@@ -122,7 +122,7 @@ class DeclarativeDB(DB):
     """Declarative database object -- to create database tables."""
 
     def __init__(self, db_url):
-        super().__init__(db_url)
+        super().__init__(Base, db_url)
 
     def create_tables(self):
         """Create all tables."""
@@ -180,6 +180,7 @@ def get_heratape_db(
         An instance of the `DB` class providing access to the heratape database.
 
     """
+    db_name = None
     if forced_db_name is not None:
         db_name = forced_db_name
 
@@ -260,3 +261,54 @@ def get_heratape_testing_db(forced_db_name="testing"):
 
     """
     return get_heratape_db(forced_db_name=forced_db_name)
+
+
+class HTSessionWrapper:
+    """
+    Class to handle when a session may already exist.
+
+    Parameters
+    ----------
+    session : :class:sqlalchemy.orm.Session, optional
+        Supplied session, or None. If it's None, one will be started within
+        this wrapper and then closed on exit. If a session is supplied it will
+        not be closed.
+    testing : bool
+        Flag to have new session be on the testing database.
+
+    """
+
+    def __init__(self, session: Session | None = None, testing: bool = False):
+        if session is None:
+            if testing:
+                db = get_heratape_testing_db()
+            else:
+                db = get_heratape_db()
+            self.session = db.sessionmaker()
+            self.close_when_done = True
+        else:
+            self.session = session
+            self.close_when_done = False
+
+    def __enter__(self):
+        """Enter the session."""
+        return self.session
+
+    def wrapup(self, updated=False):
+        """Close out the session in a non-context manner."""
+        if not isinstance(self.session, Session):
+            return None
+        if updated:
+            self.session.commit()
+        if self.close_when_done:
+            _ = self.session.close()
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """Exit the session, rollback if there's an error otherwise commit."""
+        if isinstance(self.session, Session):
+            if exception_type is not None:
+                self.session.rollback()  # exception raised
+            else:
+                self.session.commit()  # success
+        self.wrapup(updated=False)
+        return False  # propagate exception if any occurred

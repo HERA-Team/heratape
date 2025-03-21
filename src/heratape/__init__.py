@@ -8,6 +8,9 @@ from pathlib import Path
 
 from setuptools_scm import get_version
 
+from .files import Files
+from .tapes import Tapes
+
 
 # copy this function here from setup.py.
 # Copying code is terrible, but it's better than altering the python path in setup.py.
@@ -38,3 +41,5 @@ except (LookupError, ImportError):
     with contextlib.suppress(PackageNotFoundError):
         # Set the version automatically from the package details.
         __version__ = version("heratape")
+
+__all__ = [Files, Tapes]
