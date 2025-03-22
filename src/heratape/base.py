@@ -5,7 +5,7 @@
 import json
 import os
 from abc import ABCMeta
-from datetime import date
+from datetime import date, datetime
 
 import numpy as np
 from sqlalchemy import create_engine
@@ -68,6 +68,10 @@ class Base:
                     print(f"column {col} is a str, values are not equal")
                     return False
             elif isinstance(self_col, date):
+                if self_col != other_col:
+                    print(f"column {col} is a date, values are not equal")
+                    return False
+            elif isinstance(self_col, datetime):
                 if self_col != other_col:
                     print(f"column {col} is a datetime, values are not equal")
                     return False

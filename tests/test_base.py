@@ -5,7 +5,7 @@
 import datetime
 
 import numpy as np
-from sqlalchemy import Boolean, Column, Date, Float, Integer, String
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, Integer, String
 
 import heratape
 from heratape.base import Base
@@ -18,6 +18,7 @@ class TableTest(Base):
     strcol = Column(String)
     floatcol = Column(Float)
     datecol = Column(Date)
+    datetimecol = Column(DateTime)
 
 
 def table_test_obj(
@@ -26,6 +27,7 @@ def table_test_obj(
     strval="foo",
     floatval=3.14,
     dateval=datetime.datetime(2025, 3, 10),
+    datetimeval=datetime.datetime(2025, 3, 10, 12, 5, 10),
 ):
     return TableTest(
         intcol=intval,
@@ -33,11 +35,14 @@ def table_test_obj(
         strcol=strval,
         floatcol=floatval,
         datecol=dateval,
+        datetimecol=datetimeval,
     )
 
 
 def test_base_repr():
-    expected_repr = "<TableTest(3, False, foo, 3.14, 2025-03-10 00:00:00)>"
+    expected_repr = (
+        "<TableTest(3, False, foo, 3.14, 2025-03-10 00:00:00, 2025-03-10 12:05:10)>"
+    )
     assert str(table_test_obj()) == expected_repr
 
 
@@ -94,11 +99,26 @@ def test_isclose_str():
 
 
 def test_isclose_date():
+    test_obj1 = table_test_obj(dateval=datetime.date(2025, 3, 10))
+    test_obj2 = table_test_obj(dateval=datetime.date(2025, 3, 10))
+    assert test_obj1.isclose(test_obj2)
+
+    test_obj3 = table_test_obj(dateval=datetime.date(2025, 3, 11))
+    assert not test_obj1.isclose(test_obj3)
+
+    test_obj4 = table_test_obj(dateval=datetime.datetime(2025, 3, 10, 5, 3, 8))
+    assert not test_obj1.isclose(test_obj4)
+
+    test_obj5 = table_test_obj(dateval=None)
+    assert not test_obj1.isclose(test_obj5)
+
+
+def test_isclose_datetime():
     test_obj1 = table_test_obj(dateval=datetime.datetime(2025, 3, 10))
     test_obj2 = table_test_obj(dateval=datetime.datetime(2025, 3, 10, 0, 0, 0))
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(dateval=datetime.datetime(2025, 3, 11))
+    test_obj3 = table_test_obj(dateval=datetime.date(2025, 3, 11))
     assert not test_obj1.isclose(test_obj3)
 
     test_obj4 = table_test_obj(dateval=datetime.datetime(2025, 3, 10, 5, 3, 8))
