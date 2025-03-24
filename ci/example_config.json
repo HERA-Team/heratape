@@ -1,0 +1,13 @@
+{
+    "default_db_name": "hera_mc",
+    "databases": {
+      "heratape": {
+        "url": "postgresql://hera:hera@localhost/heratape",
+        "mode": "testing"
+      },
+      "testing": {
+        "url": "postgresql://hera:hera@localhost/heratape_test",
+        "mode": "testing"
+      }
+    }
+  }
