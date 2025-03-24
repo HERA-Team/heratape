@@ -44,8 +44,8 @@ test = [
     "coverage",
     "pre-commit",
 ]
-doc = ["matplotlib", "pypandoc", "sphinx"]
-dev = ["pyuvdata[test,doc]"]
+doc = ["pypandoc", "sphinx"]
+dev = ["heratape[test,doc]"]
 
 [project.urls]
 Repository = "https://github.com/HERA-Team/heratape"
