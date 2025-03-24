@@ -5,173 +5,169 @@
 import datetime
 
 import numpy as np
-from sqlalchemy import Boolean, Column, Date, DateTime, Float, Integer, String
 
 import heratape
-from heratape.base import Base
+from heratape import Files, Tapes
 
 
-class TableTest(Base):
-    __tablename__ = "table_test"
-    intcol = Column(Integer, primary_key=True)
-    boolcol = Column(Boolean)
-    strcol = Column(String)
-    floatcol = Column(Float)
-    datecol = Column(Date)
-    datetimecol = Column(DateTime)
-
-
-def table_test_obj(
-    intval=3,
-    boolval=False,
-    strval="foo",
-    floatval=3.14,
-    dateval=datetime.datetime(2025, 3, 10),
-    datetimeval=datetime.datetime(2025, 3, 10, 12, 5, 10),
+def tape_obj(
+    tape_id="HERA_01",
+    tape_type="foo",
+    size=int(8e12),
+    purchase_date=datetime.date(2025, 1, 15),
 ):
-    return TableTest(
-        intcol=intval,
-        boolcol=boolval,
-        strcol=strval,
-        floatcol=floatval,
-        datecol=dateval,
-        datetimecol=datetimeval,
+    return Tapes(
+        tape_id=tape_id, tape_type=tape_type, size=size, purchase_date=purchase_date
+    )
+
+
+def files_obj(
+    filebase="zen_2459562.5_sum.uvh5",
+    filepath="/home/data/2459562/zen_2459562.5_sum.uvh5",
+    tape_id="HERA_01",
+    obsid=1323475218,
+    jd_start=2459562.5,
+    jd=2459562,
+    size=int(2e9),
+    write_date=datetime.datetime(2025, 3, 15, 10, 20, 6),
+):
+    return Files(
+        filebase=filebase,
+        filepath=filepath,
+        tape_id=tape_id,
+        obsid=obsid,
+        jd_start=jd_start,
+        jd=jd,
+        size=size,
+        write_date=write_date,
     )
 
 
 def test_base_repr():
-    expected_repr = (
-        "<TableTest(3, False, foo, 3.14, 2025-03-10 00:00:00, 2025-03-10 12:05:10)>"
-    )
-    assert str(table_test_obj()) == expected_repr
+    expected_repr = "<Tapes(HERA_01, foo, 8000000000000, 2025-01-15)>"
+    assert str(tape_obj()) == expected_repr
 
 
 def test_isclose_class():
-    class NewTest(Base):
-        __tablename__ = "new_test"
-        intcol = Column(Integer, primary_key=True)
-
-    new_obj = NewTest(intcol=3)
-
-    assert not table_test_obj().isclose(new_obj)
+    assert not tape_obj().isclose(files_obj())
 
 
 def test_isclose_int():
-    test_obj1 = table_test_obj(intval=3)
-    test_obj2 = table_test_obj(intval=3)
+    test_obj1 = tape_obj(size=3)
+    test_obj2 = tape_obj(size=3)
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(intval=5)
+    test_obj3 = tape_obj(size=5)
     assert not test_obj1.isclose(test_obj3)
 
-    test_obj4 = table_test_obj(intval=3.0)
+    test_obj4 = tape_obj(size=3.0)
     assert not test_obj1.isclose(test_obj4)
 
-    test_obj5 = table_test_obj(intval=None)
+    test_obj5 = tape_obj(size=None)
     assert not test_obj1.isclose(test_obj5)
 
-    test_obj6 = table_test_obj(intval=None)
+    test_obj6 = tape_obj(size=None)
     assert test_obj5.isclose(test_obj6)
 
 
 def test_isclose_bool():
-    test_obj1 = table_test_obj(boolval=True)
-    test_obj2 = table_test_obj(boolval=True)
+    test_obj1 = tape_obj(tape_type=True)
+    test_obj2 = tape_obj(tape_type=True)
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(boolval=False)
+    test_obj3 = tape_obj(tape_type=False)
     assert not test_obj1.isclose(test_obj3)
 
-    test_obj4 = table_test_obj(boolval=1)
+    test_obj4 = tape_obj(tape_type=1)
     assert not test_obj1.isclose(test_obj4)
 
 
 def test_isclose_str():
-    test_obj1 = table_test_obj(strval="foo")
-    test_obj2 = table_test_obj(strval="foo")
+    test_obj1 = tape_obj(tape_type="foo")
+    test_obj2 = tape_obj(tape_type="foo")
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(strval="bar")
+    test_obj3 = tape_obj(tape_type="bar")
     assert not test_obj1.isclose(test_obj3)
 
-    test_obj4 = table_test_obj(strval=5.0)
+    test_obj4 = tape_obj(tape_type=5.0)
     assert not test_obj1.isclose(test_obj4)
 
 
 def test_isclose_date():
-    test_obj1 = table_test_obj(dateval=datetime.date(2025, 3, 10))
-    test_obj2 = table_test_obj(dateval=datetime.date(2025, 3, 10))
+    test_obj1 = tape_obj(purchase_date=datetime.date(2025, 3, 10))
+    test_obj2 = tape_obj(purchase_date=datetime.date(2025, 3, 10))
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(dateval=datetime.date(2025, 3, 11))
+    test_obj3 = tape_obj(purchase_date=datetime.date(2025, 3, 11))
     assert not test_obj1.isclose(test_obj3)
 
-    test_obj4 = table_test_obj(dateval=datetime.datetime(2025, 3, 10, 5, 3, 8))
+    test_obj4 = tape_obj(purchase_date=datetime.datetime(2025, 3, 10, 5, 3, 8))
     assert not test_obj1.isclose(test_obj4)
 
-    test_obj5 = table_test_obj(dateval=None)
+    test_obj5 = tape_obj(purchase_date=None)
     assert not test_obj1.isclose(test_obj5)
 
 
 def test_isclose_datetime():
-    test_obj1 = table_test_obj(dateval=datetime.datetime(2025, 3, 10))
-    test_obj2 = table_test_obj(dateval=datetime.datetime(2025, 3, 10, 0, 0, 0))
+    test_obj1 = files_obj(write_date=datetime.datetime(2025, 3, 10))
+    test_obj2 = files_obj(write_date=datetime.datetime(2025, 3, 10, 0, 0, 0))
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(dateval=datetime.date(2025, 3, 11))
+    test_obj3 = files_obj(write_date=datetime.date(2025, 3, 11))
     assert not test_obj1.isclose(test_obj3)
 
-    test_obj4 = table_test_obj(dateval=datetime.datetime(2025, 3, 10, 5, 3, 8))
+    test_obj4 = files_obj(write_date=datetime.datetime(2025, 3, 10, 5, 3, 8))
     assert not test_obj1.isclose(test_obj4)
 
-    test_obj5 = table_test_obj(dateval=None)
+    test_obj5 = files_obj(write_date=None)
     assert not test_obj1.isclose(test_obj5)
 
 
 def test_isclose_float():
-    test_obj1 = table_test_obj(floatval=3.1415)
-    test_obj1.tols = {"floatcol": {"atol": 1e-3, "rtol": 0}}
+    test_obj1 = files_obj(jd_start=3.1415)
+    test_obj1.tols = {"jd_start": {"atol": 1e-3, "rtol": 0}}
 
-    test_obj2 = table_test_obj(floatval=3.1415)
+    test_obj2 = files_obj(jd_start=3.1415)
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(floatval=3.1414)
+    test_obj3 = files_obj(jd_start=3.1414)
     assert test_obj1.isclose(test_obj3)
 
-    test_obj4 = table_test_obj(floatval=3.1426)
+    test_obj4 = files_obj(jd_start=3.1426)
     assert not test_obj1.isclose(test_obj4)
 
-    test_obj5 = table_test_obj(floatval=3.1415 + 9e-9)
+    test_obj5 = files_obj(jd_start=3.1415 + 9e-9)
     assert test_obj2.isclose(test_obj5)
 
-    test_obj6 = table_test_obj(floatval=(3.1415 * (1 + 1e-5)) + 1.1e-8)
+    test_obj6 = files_obj(jd_start=(3.1415 * (1 + 1e-5)) + 1.1e-8)
     assert not test_obj2.isclose(test_obj6)
 
 
 def test_isclose_float_array():
-    test_obj1 = table_test_obj(floatval=np.array([5.1, 4.2, 3.3]))
-    test_obj1.tols = {"floatcol": {"atol": 1e-3, "rtol": 0}}
+    test_obj1 = files_obj(jd_start=np.array([5.1, 4.2, 3.3]))
+    test_obj1.tols = {"jd_start": {"atol": 1e-3, "rtol": 0}}
 
-    test_obj2 = table_test_obj(floatval=np.array([5.1, 4.2, 3.3]))
+    test_obj2 = files_obj(jd_start=np.array([5.1, 4.2, 3.3]))
     assert test_obj1.isclose(test_obj2)
 
-    test_obj3 = table_test_obj(floatval=np.array([5.1001, 4.2, 3.3]))
+    test_obj3 = files_obj(jd_start=np.array([5.1001, 4.2, 3.3]))
     assert test_obj1.isclose(test_obj3)
 
-    test_obj4 = table_test_obj(floatval=np.array([5.101, 4.2, 3.3]))
+    test_obj4 = files_obj(jd_start=np.array([5.101, 4.2, 3.3]))
     assert not test_obj1.isclose(test_obj4)
 
-    test_obj5 = table_test_obj(floatval=[5.1, 4.2, 3.3])
-    test_obj5.tols = {"floatcol": {"atol": 1e-3, "rtol": 0}}
+    test_obj5 = files_obj(jd_start=[5.1, 4.2, 3.3])
+    test_obj5.tols = {"jd_start": {"atol": 1e-3, "rtol": 0}}
     assert not test_obj1.isclose(test_obj5)
 
-    test_obj6 = table_test_obj(floatval=[5.1, 4.2, 3.3])
+    test_obj6 = files_obj(jd_start=[5.1, 4.2, 3.3])
     assert test_obj5.isclose(test_obj6)
 
-    test_obj7 = table_test_obj(floatval=[5.1, 4.2001, 3.3])
+    test_obj7 = files_obj(jd_start=[5.1, 4.2001, 3.3])
     assert test_obj5.isclose(test_obj7)
 
-    test_obj8 = table_test_obj(floatval=[5.1, 4.202, 3.3])
+    test_obj8 = files_obj(jd_start=[5.1, 4.202, 3.3])
     assert not test_obj5.isclose(test_obj8)
 
 
