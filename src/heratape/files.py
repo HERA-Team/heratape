@@ -9,7 +9,16 @@ from math import floor
 from pathlib import Path
 
 from astropy.time import Time
-from sqlalchemy import BigInteger, Column, DateTime, Float, ForeignKey, String, insert
+from sqlalchemy import (
+    BigInteger,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+    insert,
+)
 from sqlalchemy.orm import Session
 
 from heratape.tapes import get_tape
@@ -59,6 +68,8 @@ class Files(Base):
 
     # tolerances set to 1ms
     tols = {"jd_start": DEFAULT_DAY_TOL}
+
+    Index("idx_jd", "jd")
 
 
 def add_files_to_tape(
