@@ -2,11 +2,11 @@
     "default_db_name": "heratape",
     "databases": {
       "heratape": {
-        "url": "postgresql://hera:hera@localhost/heratape",
+        "url": "postgresql+psycopg://hera:hera@localhost/heratape",
         "mode": "testing"
       },
       "testing": {
-        "url": "postgresql://hera:hera@localhost/heratape_test",
+        "url": "postgresql+psycopg://hera:hera@localhost/heratape_test",
         "mode": "testing"
       }
     }
