@@ -96,3 +96,180 @@ jobs:
         with:
             token: ${{secrets.CODECOV_TOKEN}} #required
             files: ./coverage.xml #optional
+
+  min_versions:
+    env:
+      ENV_NAME: heratape_min_versions
+      PYTHON: "3.11"
+      WITH_SUDO: yes
+      # use localhost for the host here because we are running the job on the VM.
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    name: min_versions testing
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # Adding -l {0} helps ensure conda can be found properly.
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+    services:
+      postgres:
+        image: postgres:9.5
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+        # will assign a random free host port
+        - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+
+      - name: Setup Miniforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          python-version: ${{ env.PYTHON }}
+          environment-file: ci/${{ env.ENV_NAME }}.yaml
+          activate-environment: ${{ env.ENV_NAME }}
+
+      - name: Conda Info
+        run: |
+          conda info -a
+          conda list
+          PYVER=`python -c "import sys; print('{:d}.{:d}'.format(sys.version_info.major, sys.version_info.minor))"`
+          if [[ $PYVER != ${{ env.PYTHON }} ]]; then
+            exit 1;
+          fi
+
+      - name: Install
+        run: |
+          pip install --no-deps .
+
+          - name: Setup postgres
+          run: |
+            export POSTGRES_URL=postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
+            psql $POSTGRES_URL -c 'create database heratape_test;'
+            psql $POSTGRES_URL -c 'create database heratape;'
+            psql $POSTGRES_URL -c "create user hera with password 'hera';"
+          env:
+            POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+
+      - name: Upgrade Database Schema
+        run: |
+          mkdir ~/.heratape
+          cp ci/example_config.json ~/.heratape/heratape_config.json
+          alembic upgrade head
+        env:
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+
+      - name: Run Tests
+        run: |
+          python -m pytest --cov=heratape --cov-config=.coveragerc --cov-report xml:./coverage.xml
+        env:
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+
+      - uses: codecov/codecov-action@v5
+        if: success()
+        with:
+            token: ${{secrets.CODECOV_TOKEN}} #required
+            files: ./coverage.xml #optional
+
+  # Use pip for diversity
+  warning_tests:
+    env:
+      ENV_NAME: tests
+      PYTHON: "3.13"
+      WITH_SUDO: yes
+      # use localhost for the host here because we are running the job on the VM.
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    name: Warnings Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # Adding -l {0} helps ensure conda can be found properly.
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+    services:
+      postgres:
+        image: postgres:10.8
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+        # will assign a random free host port
+        - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis
+        env:
+          REDIS_HOST: redishost
+        ports:
+        - 6379:6379
+        options: --entrypoint redis-server --network-alias $REDIS_HOST -v /data:/data --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON }}
+
+      - name: Install
+        run: pip install -e .[dev]
+
+      - name: Environment Info
+        run: |
+          pip list
+          PYVER=`python -c "import sys; print('{:d}.{:d}'.format(sys.version_info.major, sys.version_info.minor))"`
+          if [[ $PYVER != ${{ env.PYTHON }} ]]; then
+            exit 1;
+          fi
+
+      - name: Setup postgres
+        run: |
+          export POSTGRES_URL=postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
+          psql $POSTGRES_URL -c 'create database heratape_test;'
+          psql $POSTGRES_URL -c 'create database heratape;'
+          psql $POSTGRES_URL -c "create user hera with password 'hera';"
+        env:
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+
+      - name: Upgrade Database Schema
+        run: |
+          mkdir ~/.heratape
+          cp ci/example_config.json ~/.heratape/heratape_config.json
+          alembic upgrade head
+        env:
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+
+      - name: Run Tests
+        run: |
+          python -m pytest -W error --cov=heratape --cov-config=.coveragerc --cov-report xml:./coverage.xml
+        env:
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+
+      - uses: codecov/codecov-action@v5
+        if: success()
+        with:
+            token: ${{secrets.CODECOV_TOKEN}} #required
+            files: ./coverage.xml #optional
