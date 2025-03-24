@@ -1,5 +1,5 @@
 {
-    "default_db_name": "hera_mc",
+    "default_db_name": "heratape",
     "databases": {
       "heratape": {
         "url": "postgresql://hera:hera@localhost/heratape",
