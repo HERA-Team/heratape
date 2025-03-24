@@ -56,6 +56,9 @@ Repository = "https://github.com/HERA-Team/heratape"
 testpaths = "tests"
 addopts = "--ignore=scripts --ignore=docs"
 
+[tool.ruff]
+src = ["src"]
+
 [tool.ruff.lint]
 select = [
     "E", # pycodestyle
@@ -81,6 +84,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"] # Don't require docstrings for tests
 "docs/*.py" = ["D", "A"] # Don't require docstrings or worry about builtins for docs
+"alembic/*" = ["D"] # Don't require docstrings alembic stuff
 "setup.py" = ["D"] # Don't require docstrings for setup.py
 
 [tool.ruff.format]
