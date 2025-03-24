@@ -180,11 +180,11 @@ def test_check_connection(tmpdir):
         assert check_connection(s) is False
 
     test_config = {
-        "default_db_name": "hera_mc",
+        "default_db_name": "heratape",
         "databases": {
-            "hera_mc": {
+            "heratape": {
                 "url": "postgresql+psycopg://hera:hera@localhost/heratape",
-                "mode": "testing",
+                "mode": "production",
             },
             "testing": {
                 "url": "postgresql+psycopg://hera:hera@localhost/heratape_test",
@@ -204,4 +204,4 @@ def test_check_connection(tmpdir):
     with pytest.raises(
         RuntimeError, match="Could not establish valid connection to database."
     ):
-        get_heratape_db(test_config_file)
+        get_heratape_db(test_config_file, forced_db_name="foo")

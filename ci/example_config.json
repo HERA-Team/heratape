@@ -3,7 +3,7 @@
     "databases": {
       "heratape": {
         "url": "postgresql+psycopg://hera:hera@localhost/heratape",
-        "mode": "testing"
+        "mode": "production"
       },
       "testing": {
         "url": "postgresql+psycopg://hera:hera@localhost/heratape_test",
