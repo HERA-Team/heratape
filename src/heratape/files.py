@@ -187,7 +187,7 @@ def get_all_jds(*, session: Session | None = None, testing: bool = False):
 
 
 def set_write_date(
-    filebase_list: list[str],
+    file_list: list[str],
     write_date: Time | datetime.datetime,
     session: Session | None = None,
     testing: bool = False,
@@ -198,7 +198,7 @@ def set_write_date(
     Parameters
     ----------
     filebase_list : list of str
-        List of file base names to set the write date for.
+        List of files (either full paths or file base names) to set the write date for.
     write_date : :class:`astropy.time.Time` or datetime
         The date the files were written. To pass a human typed date use e.g.
         Time("2025-01-15").
@@ -212,6 +212,9 @@ def set_write_date(
         write_date = write_date.tt.datetime
     elif not isinstance(write_date, datetime.datetime):
         raise ValueError("write_date must be a datetime or astropy Time object")
+
+    # get file base names. a no-op if basenames are already passed in.
+    filebase_list = [Path(filepath).name for filepath in file_list]
 
     file_dict_list = [
         {"filebase": fbase, "write_date": write_date} for fbase in filebase_list

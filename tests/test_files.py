@@ -22,8 +22,10 @@ from heratape.tapes import add_tape
         Time("2025-03-15T10:20:06", scale="utc"),
     ],
 )
-@pytest.mark.parametrize("set_date", [True, False])
-def test_add_files_to_tape(test_session, write_date, set_date):
+@pytest.mark.parametrize(
+    ("set_date", "set_full_paths"), [(True, True), (True, False), (False, False)]
+)
+def test_add_files_to_tape(test_session, write_date, set_date, set_full_paths):
     tape_id = "HERA_01"
     tape_type = "foo"
     size = int(8e12)
@@ -70,9 +72,11 @@ def test_add_files_to_tape(test_session, write_date, set_date):
     if set_date:
         file_records = test_session.query(Files).all()
         test_session.commit()
-        set_write_date(
-            filebase_list=filebases, write_date=write_date, session=test_session
-        )
+        if set_full_paths:
+            file_list = filepaths
+        else:
+            file_list = filebases
+        set_write_date(file_list=file_list, write_date=write_date, session=test_session)
 
     if isinstance(write_date, Time):
         exp_write_date = write_date.tt.datetime
@@ -187,4 +191,4 @@ def test_set_write_date_errors():
     with pytest.raises(
         ValueError, match="write_date must be a datetime or astropy Time object"
     ):
-        set_write_date(filebase_list=["foo"], write_date="2021-12-14T00:00:00")
+        set_write_date(file_list=["foo"], write_date="2021-12-14T00:00:00")
