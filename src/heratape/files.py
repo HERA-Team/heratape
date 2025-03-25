@@ -118,7 +118,7 @@ def add_files_to_tape(
     if isinstance(write_date, Time):
         write_date = write_date.tt.datetime
     elif not isinstance(write_date, datetime.datetime):
-        raise ValueError("purchase date must be a datetime or astropy Time object")
+        raise ValueError("write_date must be a datetime or astropy Time object")
 
     n_files = len(filepath_list)
     n_obsids = len(obsid_list)
