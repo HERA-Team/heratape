@@ -25,19 +25,10 @@ from heratape.tapes import add_tape
 @pytest.mark.parametrize(
     ("set_date", "set_full_paths"), [(True, True), (True, False), (False, False)]
 )
-def test_add_files_to_tape(test_session, write_date, set_date, set_full_paths):
-    tape_id = "HERA_01"
-    tape_type = "foo"
-    size = int(8e12)
-    purchase_date = Time("2025-01-15")
-
-    add_tape(
-        tape_id=tape_id,
-        tape_type=tape_type,
-        size=size,
-        purchase_date=purchase_date,
-        session=test_session,
-    )
+def test_add_files_to_tape(
+    test_session, tape_dict, write_date, set_date, set_full_paths
+):
+    add_tape(session=test_session, **tape_dict)
 
     n_files = 10
     time_starts = Time("2021-12-14T00:00:00", scale="utc") + TimeDelta(
@@ -60,7 +51,7 @@ def test_add_files_to_tape(test_session, write_date, set_date, set_full_paths):
         write_date_use = write_date
 
     add_files_to_tape(
-        tape_id=tape_id,
+        tape_id=tape_dict["tape_id"],
         write_date=write_date_use,
         filepath_list=filepaths,
         obsid_list=obids,
@@ -86,7 +77,7 @@ def test_add_files_to_tape(test_session, write_date, set_date, set_full_paths):
         Files(
             filebase=fbase,
             filepath=fpath,
-            tape_id=tape_id,
+            tape_id=tape_dict["tape_id"],
             obsid=obsid,
             jd_start=jd_start,
             jd=jd_int,
@@ -143,19 +134,8 @@ def test_add_files_to_tape(test_session, write_date, set_date, set_full_paths):
         ),
     ],
 )
-def test_add_files_to_tape_errors(test_session, param, value, err_msg):
-    tape_id = "HERA_01"
-    tape_type = "foo"
-    size = int(8e12)
-    purchase_date = Time("2025-01-15")
-
-    add_tape(
-        tape_id=tape_id,
-        tape_type=tape_type,
-        size=size,
-        purchase_date=purchase_date,
-        session=test_session,
-    )
+def test_add_files_to_tape_errors(test_session, tape_dict, param, value, err_msg):
+    add_tape(session=test_session, **tape_dict)
 
     n_files = 10
     time_starts = Time("2021-12-14T00:00:00", scale="utc") + TimeDelta(
@@ -173,7 +153,7 @@ def test_add_files_to_tape_errors(test_session, param, value, err_msg):
     write_date = datetime.datetime(2025, 3, 15, 10, 20, 6)
 
     kwargs = {
-        "tape_id": tape_id,
+        "tape_id": tape_dict["tape_id"],
         "write_date": write_date,
         "filepath_list": filepaths,
         "obsid_list": obids,

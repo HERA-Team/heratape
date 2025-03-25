@@ -3,6 +3,7 @@
 
 """Testing environment setup and teardown for pytest."""
 
+import datetime
 import urllib
 import warnings
 
@@ -62,3 +63,13 @@ def test_session(setup_and_teardown_package):
                 "ignore", "transaction already deassociated from connection"
             )
             test_trans.rollback()
+
+
+@pytest.fixture(scope="function")
+def tape_dict():
+    return {
+        "tape_id": "HERA_01",
+        "tape_type": "foo",
+        "size": int(8e12),
+        "purchase_date": datetime.date(2025, 1, 15),
+    }
