@@ -11,7 +11,7 @@ import pytest
 from astropy.time import Time, TimeDelta
 
 from heratape import Files
-from heratape.files import add_files_to_tape, get_all_jds
+from heratape.files import add_files_to_tape, get_all_jds, set_write_date
 from heratape.tapes import add_tape
 
 
@@ -22,7 +22,8 @@ from heratape.tapes import add_tape
         Time("2025-03-15T10:20:06", scale="utc"),
     ],
 )
-def test_add_files_to_tape(test_session, write_date):
+@pytest.mark.parametrize("set_date", [True, False])
+def test_add_files_to_tape(test_session, write_date, set_date):
     tape_id = "HERA_01"
     tape_type = "foo"
     size = int(8e12)
@@ -51,15 +52,27 @@ def test_add_files_to_tape(test_session, write_date):
     filebases = [f"zen_{jd}_sum.uvh5" for jd in jd_starts]
     sizes = [int(2e9)] * n_files
 
+    if set_date:
+        write_date_use = None
+    else:
+        write_date_use = write_date
+
     add_files_to_tape(
         tape_id=tape_id,
-        write_date=write_date,
+        write_date=write_date_use,
         filepath_list=filepaths,
         obsid_list=obids,
         jd_start_list=jd_starts,
         size_list=sizes,
         session=test_session,
     )
+
+    if set_date:
+        file_records = test_session.query(Files).all()
+        test_session.commit()
+        set_write_date(
+            filebase_list=filebases, write_date=write_date, session=test_session
+        )
 
     if isinstance(write_date, Time):
         exp_write_date = write_date.tt.datetime
@@ -81,7 +94,7 @@ def test_add_files_to_tape(test_session, write_date):
         )
     ]
 
-    file_records = test_session.query(Files).all()
+    file_records = test_session.query(Files).order_by(Files.filebase).all()
     assert len(file_records) == n_files
 
     for f_ind, f_rec in enumerate(file_records):
@@ -104,7 +117,7 @@ def test_add_files_to_tape(test_session, write_date):
         (
             "write_date",
             "2021-12-14T00:00:00",
-            "write_date must be a datetime or astropy Time object",
+            "If set, write_date must be a datetime or astropy Time object",
         ),
         (
             "obsid_list",
@@ -168,3 +181,10 @@ def test_add_files_to_tape_errors(test_session, param, value, err_msg):
 
     with pytest.raises(ValueError, match=err_msg):
         add_files_to_tape(**kwargs)
+
+
+def test_set_write_date_errors():
+    with pytest.raises(
+        ValueError, match="write_date must be a datetime or astropy Time object"
+    ):
+        set_write_date(filebase_list=["foo"], write_date="2021-12-14T00:00:00")
