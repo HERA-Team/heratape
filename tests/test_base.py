@@ -10,7 +10,7 @@ import pytest
 
 import heratape
 from heratape import Files, Tapes
-from heratape.base import HTSessionWrapper, get_heratape_db
+from heratape.base import DeclarativeDB, HTSessionWrapper, get_heratape_db
 
 
 def tape_obj(
@@ -257,8 +257,14 @@ def test_get_heratape_db(tmpdir, change, db_name, err_msg):
     with pytest.raises(RuntimeError, match=err_msg):
         get_heratape_db(test_config_file, forced_db_name=db_name)
 
+    if change is None and db_name == "foo":
+        bad_db = get_heratape_db(
+            test_config_file, forced_db_name=db_name, check_connect=False
+        )
+        assert isinstance(bad_db, DeclarativeDB)
 
-def test_ht_session():
+
+def test_ht_session(test_session):
     with pytest.raises(ValueError, match="test error"), HTSessionWrapper(testing=True):
         raise ValueError("test error")
 
@@ -269,3 +275,4 @@ def test_ht_session():
     ht_sess.session.close()
     ht_sess.session = None
     ht_sess.wrapup()
+    ht_sess.__exit__(None, None, None)
