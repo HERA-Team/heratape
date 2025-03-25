@@ -6,9 +6,8 @@ Test that default database matches code schema.
 """
 
 import pytest
-from sqlalchemy.orm import Session
 
-from heratape.base import Base, get_heratape_db
+from heratape.base import Base, HTSessionWrapper
 from heratape.db_check import is_valid_database
 
 # Sometimes a connection is closed, which is handled and doesn't produce an error
@@ -20,10 +19,6 @@ pytestmark = pytest.mark.filterwarnings("ignore:connection:ResourceWarning:psyco
 def test_default_db_schema():
     # this test will fail if the default database schema does not match the code schema
 
-    default_db = get_heratape_db()
-
-    with default_db.engine.connect() as test_conn, test_conn.begin():
-        session = Session(bind=test_conn)
-        with session:
-            valid, _ = is_valid_database(Base, session)
-            assert valid
+    with HTSessionWrapper() as ht_sess:
+        valid, _ = is_valid_database(Base, ht_sess)
+        assert valid

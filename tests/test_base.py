@@ -3,11 +3,14 @@
 """Test base."""
 
 import datetime
+import json
 
 import numpy as np
+import pytest
 
 import heratape
 from heratape import Files, Tapes
+from heratape.base import HTSessionWrapper, get_heratape_db
 
 
 def tape_obj(
@@ -129,6 +132,7 @@ def test_isclose_float():
     test_obj1.tols = {"jd_start": {"atol": 1e-3, "rtol": 0}}
 
     test_obj2 = files_obj(jd_start=3.1415)
+    test_obj2.tols = {}
     assert test_obj1.isclose(test_obj2)
 
     test_obj3 = files_obj(jd_start=3.1414)
@@ -175,3 +179,93 @@ def test_version():
     # this just exercises the version code in `__init__.py`
 
     assert heratape.__version__ is not None
+
+
+@pytest.mark.parametrize(
+    ("change", "db_name", "err_msg"),
+    [
+        (None, "foo", "Could not establish valid connection to database."),
+        (
+            "no_default",
+            None,
+            "cannot connect to heratape database: no DB name provided, and no "
+            "default listed",
+        ),
+        ("no_dbs", None, 'cannot connect to heratape database: no "databases" section'),
+        (
+            None,
+            "bar",
+            "cannot connect to heratape database: no DB named 'bar' in the "
+            '"databases" section',
+        ),
+        (
+            "no_url",
+            None,
+            'cannot connect to heratape database: no "url" item for the DB named '
+            "'heratape'",
+        ),
+        (
+            "no_mode",
+            None,
+            'cannot connect to heratape database: no "mode" item for the DB named '
+            "'heratape'",
+        ),
+        (
+            "change_mode",
+            None,
+            "cannot connect to heratape database: unrecognized mode 'foo' for "
+            "the DB named 'heratape'",
+        ),
+    ],
+)
+def test_get_heratape_db(tmpdir, change, db_name, err_msg):
+    """Check that a missing database raises appropriate exception."""
+    # Create database connection with fake url
+    test_config = {
+        "default_db_name": "heratape",
+        "databases": {
+            "heratape": {
+                "url": "postgresql+psycopg://hera:hera@localhost/heratape",
+                "mode": "production",
+            },
+            "testing": {
+                "url": "postgresql+psycopg://hera:hera@localhost/heratape_test",
+                "mode": "testing",
+            },
+            "foo": {
+                "url": "postgresql+psycopg://hera:hera@localhost/foo",
+                "mode": "testing",
+            },
+        },
+    }
+
+    if change == "no_default":
+        del test_config["default_db_name"]
+    elif change == "no_dbs":
+        del test_config["databases"]
+    elif change == "no_url":
+        del test_config["databases"]["heratape"]["url"]
+    elif change == "no_mode":
+        del test_config["databases"]["heratape"]["mode"]
+    elif change == "change_mode":
+        test_config["databases"]["heratape"]["mode"] = "foo"
+
+    test_config_file = tmpdir + "test_config.json"
+    with open(test_config_file, "w") as outfile:
+        json.dump(test_config, outfile, indent=4)
+
+    with pytest.raises(RuntimeError, match=err_msg):
+        get_heratape_db(test_config_file, forced_db_name=db_name)
+
+
+def test_ht_session():
+    with pytest.raises(ValueError, match="test error"), HTSessionWrapper(testing=True):
+        raise ValueError("test error")
+
+    ht_sess = HTSessionWrapper(testing=True)
+    ht_sess.wrapup(updated=True)
+
+    ht_sess = HTSessionWrapper(testing=True)
+    ht_sess.session.close()
+    ht_sess.session = None
+    ht_sess.wrapup()

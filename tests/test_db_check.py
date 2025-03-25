@@ -1,16 +1,14 @@
 # Copyright (c) 2025 HERA-Team
 # Licensed under the 2-clause BSD License
 import contextlib
-import json
 import re
 
-import pytest
 import sqlalchemy
 from sqlalchemy import Column, ForeignKey, Integer, String, text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import declarative_base, declared_attr, relationship, sessionmaker
 
-from heratape.base import DeclarativeDB, get_heratape_db
+from heratape.base import DeclarativeDB
 from heratape.db_check import check_connection, is_valid_database
 
 
@@ -172,36 +170,9 @@ def test_validity_pass_declarative(test_engine, test_session):
         base.metadata.drop_all(test_engine)
 
 
-def test_check_connection(tmpdir):
+def test_check_connection():
     """Check that a missing database raises appropriate exception."""
     # Create database connection with fake url
     db = DeclarativeDB("postgresql+psycopg://hera@localhost/foo")
     with db.sessionmaker() as s:
         assert check_connection(s) is False
-
-    test_config = {
-        "default_db_name": "heratape",
-        "databases": {
-            "heratape": {
-                "url": "postgresql+psycopg://hera:hera@localhost/heratape",
-                "mode": "production",
-            },
-            "testing": {
-                "url": "postgresql+psycopg://hera:hera@localhost/heratape_test",
-                "mode": "testing",
-            },
-            "foo": {
-                "url": "postgresql+psycopg://hera:hera@localhost/foo",
-                "mode": "testing",
-            },
-        },
-    }
-
-    test_config_file = tmpdir + "test_config.json"
-    with open(test_config_file, "w") as outfile:
-        json.dump(test_config, outfile, indent=4)
-
-    with pytest.raises(
-        RuntimeError, match="Could not establish valid connection to database."
-    ):
-        get_heratape_db(test_config_file, forced_db_name="foo")
