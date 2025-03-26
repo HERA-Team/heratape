@@ -52,7 +52,7 @@ class Files(Base):
     size : BigInteger Column
         File size in bytes.
     write_date : DateTime column
-        Date when the file was written to tape.
+        Date and time when the file was written to tape.
 
     """
 
@@ -77,7 +77,7 @@ def add_files_to_tape(
     obsid_list: list[int],
     jd_start_list: list[float],
     size_list: list[int],
-    write_date: Time | datetime.datetime = None,
+    write_date: Time | datetime.datetime | None = None,
     session: Session | None = None,
     testing: bool = False,
 ):
@@ -98,8 +98,8 @@ def add_files_to_tape(
     size_list : list of int
         List of file sizes in bytes. Must be the same length as filepath_list.
     write_date : :class:`astropy.time.Time` or datetime, optional
-        The date the files are written. To pass a human typed date use e.g.
-        Time("2025-01-15").
+        The date and time the files are written. To pass a human typed date use e.g.
+        Time("2025-01-15 12:15:00").
     session : :class:sqlalchemy.orm.Session, optional
         Database session to use. If None, will start a new session, then close.
     testing : bool
@@ -201,7 +201,7 @@ def set_write_date(
         List of files (either full paths or file base names) to set the write date for.
     write_date : :class:`astropy.time.Time` or datetime
         The date the files were written. To pass a human typed date use e.g.
-        Time("2025-01-15").
+        Time("2025-01-15 12:15:00").
     session : :class:sqlalchemy.orm.Session, optional
         Database session to use. If None, will start a new session, then close.
     testing : bool
@@ -222,3 +222,84 @@ def set_write_date(
     with HTSessionWrapper(session=session, testing=testing) as ht_sess:
         # This does a bulk update in sqlalchemy>=2.0
         ht_sess.execute(update(Files), file_dict_list)
+
+
+def update_file(
+    filename: str,
+    *,
+    tape_id: str | None = None,
+    obsid: int | None = None,
+    jd_start: str | None = None,
+    size: int | None = None,
+    write_date: Time | datetime.datetime | None = None,
+    session: Session | None = None,
+    testing: bool = False,
+):
+    """
+    Update a single file record.
+
+    The filename must be passed and the base name must match an existing entry
+    in the database. If a full file path is passed, the filepath column will be
+    updated. The other column values (tape_id, obsid, jd_start, size, write_date)
+    should only be passed if you want to update them.
+
+    Parameters
+    ----------
+    filename : str
+        The filename to update the record for. This can be a file base name or
+        a full filepath. If a full file path is passed, the filepath column
+        will be updated. The file base name must already exist in the database.
+    tape_id : str
+        The unique identifier of the tape the files are written to.
+    obsid : int
+        Observation ID (obsid) for the file. Typically the floor of the start time
+        in gps seconds.
+    jd_start : float
+        Start time in JD for the file.
+    size : int
+        File size in bytes.
+    write_date : :class:`astropy.time.Time` or datetime, optional
+        The date the file was written. To pass a human typed date use e.g.
+        Time("2025-01-15 12:15:00").
+    session : :class:sqlalchemy.orm.Session, optional
+        Database session to use. If None, will start a new session, then close.
+    testing : bool
+        Option to do the operation on the testing database rather than the default one.
+
+    """
+    if tape_id is not None:
+        tape_record = get_tape(tape_id, session=session, testing=testing)
+        if tape_record is None:
+            raise ValueError(
+                f"tape {tape_id} is not yet in the tapes table. Use the add_tape "
+                "function to add it before adding files to it."
+            )
+
+    if isinstance(write_date, Time):
+        write_date = write_date.tt.datetime
+    elif write_date is not None and not isinstance(write_date, datetime.datetime):
+        raise ValueError("If set, write_date must be a datetime or astropy Time object")
+
+    filebase = Path(filename).name
+
+    update_vals = {}
+    if filename != filebase:
+        update_vals["filepath"] = filename
+    if tape_id is not None:
+        update_vals["tape_id"] = tape_id
+    if obsid is not None:
+        update_vals["obsid"] = obsid
+    if jd_start is not None:
+        update_vals["jd_start"] = jd_start
+        update_vals["jd"] = int(floor(jd_start))
+    if size is not None:
+        update_vals["size"] = size
+    if write_date is not None:
+        update_vals["write_date"] = write_date
+
+    if len(update_vals) == 0:
+        return
+
+    stmt = update(Files).where(Files.filebase == filebase).values(**update_vals)
+    with HTSessionWrapper(session=session, testing=testing) as ht_sess:
+        ht_sess.execute(stmt)
