@@ -7,6 +7,7 @@ from __future__ import annotations
 import datetime
 from math import floor
 from pathlib import Path
+from sqlalchemy.sql import func 
 
 from astropy.time import Time
 from sqlalchemy import (
@@ -303,3 +304,23 @@ def update_file(
     stmt = update(Files).where(Files.filebase == filebase).values(**update_vals)
     with HTSessionWrapper(session=session, testing=testing) as ht_sess:
         ht_sess.execute(stmt)
+def list_incomplete(tape_id=None, testing=False):
+    # list the names of files with no write date
+    # set tape_id =None to list all, or to a tape serial number to list those
+    # return a list of files that weren't signed off with a write date.
+    #  this can happen if the write was interrupted before the db could be informed of success
+    #  writes can take hours, so this unhappy situation is likely
+    with HTSessionWrapper(testing=testing) as ht_sess: 
+        if tape_id is None:
+            return ht_sess.query(Files.filename).where(Files.write_date == None).all() 
+        else:
+            return ht_sess.query(Files.filename).where(Files.write_date == None).where(Files.tape_id==tape_id).all()
+def query_tape_usage(tape_id,testing=False):
+    #input: a tape serial number 
+    #output: total data volume in bytes
+    with HTSessionWrapper(testing=testing) as ht_sess:
+        usage = ht_sess.query(func.sum(Files.size)).where(Files.tape_id == tape_id).one()[0]
+    if usage is None:
+        return 0
+    else:
+        return usage
