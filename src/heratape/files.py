@@ -312,9 +312,12 @@ def list_incomplete(tape_id=None, testing=False):
     #  writes can take hours, so this unhappy situation is likely
     with HTSessionWrapper(testing=testing) as ht_sess: 
         if tape_id is None:
-            return ht_sess.query(Files.filename).where(Files.write_date == None).all() 
+            return ht_sess.query(func.distinct(Files.jd)).where(Files.write_date == None).all(), \
+                    ht_sess.query(Files.filebase).where(Files.write_date == None).all() 
         else:
-            return ht_sess.query(Files.filename).where(Files.write_date == None).where(Files.tape_id==tape_id).all()
+            return ht_sess.query(func.distinct(Files.jd)).where(Files.write_date ==
+            None).where(Files.tape_id==tape_id).all(),\
+                    ht_sess.query(Files.filebase).where(Files.write_date == None).where(Files.tape_id==tape_id).all()
 def query_tape_usage(tape_id,testing=False):
     #input: a tape serial number 
     #output: total data volume in bytes
