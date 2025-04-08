@@ -1,0 +1,8 @@
+# list of JD ranges, ranges given in declining priority order
+# start JD, end JD, # name and comments
+2460524, 2460767 #H8C 1 Aug 2024 to 1 April 2025
+2460158, 2460402 #H7C 1 Aug 2023 to 1 April 2024
+#H6C 1 Aug 2022 to 1 April 2023
+#H1C 1 Aug 2017 to 1 April 2018 ?? check
+#H7C summer session, 1 April 2024 - 1 Aug 2025
+#working backwards by years
