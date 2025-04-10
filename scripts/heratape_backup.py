@@ -32,7 +32,7 @@ def find_dups(Xs):
 
 
 jdskip_cache = '/users/djacobs/src/heratape/scripts/hera_jdskip_cache.txt'
-LOCAL_CONN_NAME = "nrao" #TODO: What is this called in the lib config file?e
+LOCAL_CONN_NAME = "local" #TODO: What is this called in the lib config file?e
 TESTING=True #if true, use test db, skip actual tape  writing.
 TAPESIZE = 18e12
 
@@ -290,12 +290,6 @@ while(True):
                 logger.info('tape load complete')
                 drivetapeid = newtape_id
                 break
-    if True:
-        #write out the full file list to a txt for offline testing
-        F = open('backup.txt','w')
-        for i in np.arange(len(files)):
-            F.write(f'{drivetapeid},{files[i]}, {obsids[i]}, {start_jds[i]}, {sizes[i]}\n')
-        F.close()
     logger.info(f'adding {len(files)} files to heratape db')
     add_files_to_tape(
         tape_id=drivetapeid,
@@ -308,15 +302,24 @@ while(True):
         testing=TESTING
     )
     logger.info('files added, moving on to tape writing')
+
+    #write the file list to be read by tar
+    filelistfile = f'ht_d{mydrive}_{drivetapeid}_{Time.now().isot}.txt'
+    logger.info(f'writing file list to {filename}')
+    F = open(filelistfile,'w')
+    for i in np.arange(len(files)):
+        F.write(f'{files[i]}\n')
+        #F.write(f'{drivetapeid},{files[i]}, {obsids[i]}, {start_jds[i]}, {sizes[i]}\n')
+    F.close()
     if not TESTING:
-        logger.info("running tar: tar -cjf /dev/st{mydrive} {manyfiles}")
+        logger.info("running tar: tar -cjf /dev/st{mydrive} -T {filelistfile}")
         tstart = time.time()
-        with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} {files} ', shell=True, stdout=subprocess.PIPE) as proc:                       
+        with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ', shell=True, stdout=subprocess.PIPE) as proc:                       
                     lines = proc.stdout.readlines()
         logger.info(f'finished in {(time.time() - tstart)/60} minutes')
     else:
         logger.info(" TESTING MODE: skipping real tar to tape")
-        logger.debug(f' the tar command: time tar -cf /dev/nst{mydrive} {len(files)} not printed')
+        logger.debug(f' the tar command: time tar -cf /dev/nst{mydrive} -T {filelistfile}')
     if True:
         logger.error(f' A SIMULATED ERROR HAS OCCURRED. Like for example someone restarted the daemon during a tape write.')
         sys.exit() 
