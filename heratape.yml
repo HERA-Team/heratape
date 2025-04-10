@@ -7,5 +7,5 @@ dependencies:
   - python-systemd
   - ipython
   - pip:
-    - /users/djacobs/src/librarian
+    - git+https://github.com:HERA-Team/librarian.git
 
