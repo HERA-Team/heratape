@@ -67,7 +67,7 @@ logger.info(f'writing {len(unfinished_files)} files to {mytape}')
 logger.debug(f'first file in list {unfinished_files[0]}')
 
 #write the file list to be read by tar                                                                                  
-filelistfile = f'ht_d{mydrive}_{drivetapeid}_{Time.now().isot}.txt'                                                     
+filelistfile = f'ht_d{mydrive}_{mytape}_{Time.now().isot}.txt'                                                     
 logger.info(f'writing file list to {filename}')                                                                         
 F = open(filelistfile,'w')                                                                                                 
 for i in np.arange(len(files)):
