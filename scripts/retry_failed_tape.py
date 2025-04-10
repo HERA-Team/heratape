@@ -70,8 +70,8 @@ logger.debug(f'first file in list {unfinished_files[0]}')
 filelistfile = f'ht_d{mydrive}_{mytape}_{Time.now().isot}.txt'                                                     
 logger.info(f'writing file list to {filelistfile}')                                                                         
 F = open(filelistfile,'w')                                                                                                 
-for i in np.arange(len(unfinishedfiles)):
-    F.write(f'{unfinishedfiles[i]}\n')                                                                                            
+for i in np.arange(len(unfinished_files)):
+    F.write(f'{unfinished_files[i]}\n')                                                                                            
     #F.write(f'{drivetapeid},{files[i]}, {obsids[i]}, {start_jds[i]}, {sizes[i]}\n')                                    
 F.close()                                                                                                               
 if not TESTING:                                                                                                         
