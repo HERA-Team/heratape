@@ -66,17 +66,24 @@ with HTSessionWrapper(testing=TESTING) as ht_sess:
 logger.info(f'writing {len(unfinished_files)} files to {mytape}')
 logger.debug(f'first file in list {unfinished_files[0]}')
 
+#write the file list to be read by tar                                                                                  
+filelistfile = f'ht_d{mydrive}_{drivetapeid}_{Time.now().isot}.txt'                                                     
+logger.info(f'writing file list to {filename}')                                                                         
+F = open(filelistfile,'w')                                                                                                  for i in np.arange(len(files)):                                                                                         
+    F.write(f'{files[i]}\n')                                                                                            
+    #F.write(f'{drivetapeid},{files[i]}, {obsids[i]}, {start_jds[i]}, {sizes[i]}\n')                                    
+F.close()                                                                                                               
 if not TESTING:                                                                                                         
-    logger.info(f'running tar: tar -cjf /dev/st{mydrive} <{len(unfinished_files)}>')
+    logger.info("running tar: tar -cjf /dev/st{mydrive} -T {filelistfile}")                                             
     tstart = time.time()                                                                                                
-    with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} {unfinished_files} ', shell=True, stdout=subprocess.PIPE) as proc: 
-        lines = proc.stdout.readlines()                                                                        
+    with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ', shell=True, stdout=subprocess.PIPE) as proc:                                                                                                                        
+                lines = proc.stdout.readlines()                                                                         
     logger.info(f'finished in {(time.time() - tstart)/60} minutes')                                                     
 else:                                                                                                                   
     logger.info(" TESTING MODE: skipping real tar to tape")                                                             
-    logger.debug(f' the tar command: time tar -cf /dev/nst{mydrive} <{len(unfinished_files)} files>')     
-
-
+    logger.debug(f' the tar command: time tar -cf /dev/nst{mydrive} -T {filelistfile}')                                 
+                                                                                                                        
+logger.info("files written OK")  
 
 
 logger.info(f'setting write date to {Time.now()}')
