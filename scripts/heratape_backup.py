@@ -34,6 +34,7 @@ def find_dups(Xs):
 jdskip_cache = '/users/djacobs/src/heratape/scripts/hera_jdskip_cache.txt'
 LOCAL_CONN_NAME = "local" #TODO: What is this called in the lib config file?e
 TESTING=True #if true, use test db, skip actual tape  writing.
+DOTAPE = False
 TAPESIZE = 18e12
 
 local_client = LibrarianClient(LOCAL_CONN_NAME)
@@ -311,7 +312,7 @@ while(True):
         F.write(f'{files[i]}\n')
         #F.write(f'{drivetapeid},{files[i]}, {obsids[i]}, {start_jds[i]}, {sizes[i]}\n')
     F.close()
-    if not TESTING:
+    if not DOTAPE:
         logger.info("running tar: tar -cjf /dev/st{mydrive} -T {filelistfile}")
         tstart = time.time()
         with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ', shell=True, stdout=subprocess.PIPE) as proc:                       
@@ -320,7 +321,7 @@ while(True):
     else:
         logger.info(" TESTING MODE: skipping real tar to tape")
         logger.debug(f' the tar command: time tar -cf /dev/nst{mydrive} -T {filelistfile}')
-    if True:
+    if False:
         logger.error(f' A SIMULATED ERROR HAS OCCURRED. Like for example someone restarted the daemon during a tape write.')
         sys.exit() 
     
