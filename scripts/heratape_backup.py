@@ -306,7 +306,7 @@ while(True):
 
     #write the file list to be read by tar
     filelistfile = f'ht_d{mydrive}_{drivetapeid}_{Time.now().isot}.txt'
-    logger.info(f'writing file list to {filename}')
+    logger.info(f'writing file list to {filelistfile}')
     F = open(filelistfile,'w')
     for i in np.arange(len(files)):
         F.write(f'{files[i]}\n')
