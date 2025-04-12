@@ -34,7 +34,7 @@ def find_dups(Xs):
 jdskip_cache = '/users/djacobs/src/heratape/scripts/hera_jdskip_cache.txt'
 LOCAL_CONN_NAME = "local" #TODO: What is this called in the lib config file?e
 TESTING=True #if true, use test db, skip actual tape  writing.
-DOTAPE = False
+DOTAPE = True
 TAPESIZE = 18e12
 
 local_client = LibrarianClient(LOCAL_CONN_NAME)
@@ -125,7 +125,7 @@ while(True):
     local_files = local_client.search_files(query)
     local_sizes = [entry["size"] for entry in local_files["results"]]
     total_size = np.sum([e["size"] for e in local_files["results"]]) #size of selection in bytes                            
-    logger.info(f'Found {len(local_files)} files, total size {total_size/1e12}TB')    
+    logger.info(f'Found {len(local_sizes)} files, total size {total_size/1e12:.2f}TB')    
     if len(local_sizes)==0:                                                                              
         logger.warn(f'no data found {np.round(jdtobackup)}. skipping!')                                                 
         open(jdskip_cache,'a').writelines([str(int(jdtobackup))+'\n'])                                                  
@@ -152,7 +152,7 @@ while(True):
         local_obsids = [entry["obsid"] for entry in local_files["results"]]
         
         
-        logger.info(f'Found {len(local_names)} files, total size {total_size/1e12}TB')
+        logger.info(f'Found {len(local_names)} files, total size {total_size/1e12:.2f}TB')
         logger.debug('first 10 duplicates')
         for dup in find_dups(local_names)[:10]:
             logger.debug(dup)
@@ -262,7 +262,7 @@ while(True):
         else:
             emptyslot = empty_slots[0]
         #unload working drive to this empty slot
-        logger.info(f'unloading drive {mydrive} back to slot {emptyslot}') 
+        logger.info(f'unloading tape {drivetapeid} from drive {mydrive} back to jukebox slot {emptyslot}') 
         unload_tape(mydrive,emptyslot)
         logger.info('tape unloaded')
         #select a fresh tape
