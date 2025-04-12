@@ -75,8 +75,7 @@ while(True):
     if  np.any(incomplete_jds % 2 == mydrive):
         logger.error(f'undated entries found in heratape.files for jds {incomplete_jds[incomplete_jds % 2 ==mydrive]}')
         logger.error('This error might indicate that tape writing was interrupted. Check tape position.')
-        logger.error('TODO: add more helpful printout telling name of suspect tape')
-        logger.error('to proceed please delete these records and restart me')
+        logger.error('to proceed please run retry_failed_tape.py')
         sys.exit(1)
 
     #   select JD from a priority scheme that is NOT in the backed up JD list
@@ -203,7 +202,7 @@ while(True):
         sizes.append(F[1]['size'])
         obsids.append(F[2]['obsid'])
         start_jds.append(F[2]['start_time_jd'])
-    logger.info(f'Backing up JDS {"".join([str(jd) for jd in jds_to_backup])}. Nfiles = {len(files)}, Total Size = {np.round(np.sum(sizes)/1e12,1)}TB')
+    logger.info(f'Backing up JDS {" ".join([str(int(jd)) for jd in jds_to_backup])}. Nfiles = {len(files)}, Total Size = {np.round(np.sum(sizes)/1e12,1)}TB')
     def update_tape_usage(tapes,testing=False):
         #input: dict  from query_tape_usage and a session for heratape db
         #output: input dict with added key: usage (sum in bytes known to heratape for each tape)
@@ -263,7 +262,7 @@ while(True):
         else:
             emptyslot = empty_slots[0]
         #unload working drive to this empty slot
-        logger.info(f'unloading drive {mydrive} back to slot {empyslot}') 
+        logger.info(f'unloading drive {mydrive} back to slot {emptyslot}') 
         unload_tape(mydrive,emptyslot)
         logger.info('tape unloaded')
         #select a fresh tape
