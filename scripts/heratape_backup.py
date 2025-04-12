@@ -246,7 +246,7 @@ while(True):
     drivetapeid = tape_in_drive(mydrive)
     logger.info(f'Drive {mydrive}, Tape {drivetapeid}')
     #check the total against the remaining space
-    tape_usage = query_tape_usage(drivetapeid,testing=TESTING)
+    tape_usage = float(query_tape_usage(drivetapeid,testing=TESTING))
     if tape_usage >0:
         logger.info(f'Size of this backup = {np.sum(sizes)/1e12} TB is < the {(TAPESIZE - tape_usage)/1e12}TB theoretically remaining on the tape')
         logger.info('Load new tape')
@@ -312,8 +312,8 @@ while(True):
         F.write(f'{files[i]}\n')
         #F.write(f'{drivetapeid},{files[i]}, {obsids[i]}, {start_jds[i]}, {sizes[i]}\n')
     F.close()
-    if not DOTAPE:
-        logger.info("running tar: tar -cjf /dev/st{mydrive} -T {filelistfile}")
+    if  DOTAPE:
+        logger.info(f'running tar: tar -cjf /dev/st{mydrive} -T {filelistfile}')
         tstart = time.time()
         with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ', shell=True, stdout=subprocess.PIPE) as proc:                       
                     lines = proc.stdout.readlines()
@@ -332,3 +332,4 @@ while(True):
     set_write_date(file_bases,Time.now(),testing=TESTING)
     logger.info("DONE")
     # BACK to top and JD selection.
+    backupsize=0
