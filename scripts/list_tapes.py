@@ -23,5 +23,5 @@ print("Tapes in DB")
 print('Tape,   Usage TB (out of 18TB)')
 for tape in tapes:
     usage = query_tape_usage(tape)
-    print(f'{tape}  {usage/1e12:.2f}')
+    print(f'{tape}  {float(usage)/1e12:.2f}')
 
