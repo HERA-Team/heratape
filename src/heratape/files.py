@@ -327,3 +327,11 @@ def query_tape_usage(tape_id,testing=False):
         return 0
     else:
         return usage
+def update_tape_usage(tapes,testing=False):
+    #input: dict  from query_tape_usage and a session for heratape db
+    #output: input dict with added key: usage (sum in bytes known to heratape for each tape)
+    for i in range(len(tapes)):
+        tapeusage = query_tape_usage(tapes[i]['tape_id'],testing=testing)
+        tapes[i]['usage'] =  tapeusage
+   return tapes
+
