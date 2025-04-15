@@ -289,6 +289,18 @@ while(True):
                 logger.info(f'loading {newtape_id} from {newslot} to drive {mydrive}')
                 load_tape(mydrive,newslot)
                 logger.info('tape load complete')
+                calibrating = True
+                online = False
+                while(calibrating):
+                    online = check_drive_online(mydrive)
+                    if not online:
+                        logger.info(f'drive {mydrive} tape {newtapeid} is calibrating. \
+                        will wait 5 minutes and check again')
+                        sleep(60*4)
+                    elif calibrating and online:
+                        #indicates a change in state
+                        logger.info(f'drive {mydrive} tape {newtapeid} NOW ONLINE')
+                    calibrating = not online #This logical test is based on observation of ~4 tapes. Revise as needed
                 drivetapeid = newtape_id
                 break
     logger.info(f'adding {len(files)} files to heratape db')
