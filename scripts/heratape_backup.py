@@ -4,7 +4,8 @@
 import numpy as np
 from hera_librarian import LibrarianClient
 from heratape.base import get_heratape_testing_db                                                                           
-from heratape.files import add_files_to_tape,Files,get_all_jds,set_write_date,query_tape_usage,list_incomplete
+from heratape.files import add_files_to_tape,Files,get_all_jds,\
+    set_write_date,query_tape_usage,update_tape_usage,list_incomplete
 from heratape.tapes import Tapes                                                                                            
 from heratape.base import HTSessionWrapper
 import subprocess,os
@@ -203,13 +204,13 @@ while(True):
         obsids.append(F[2]['obsid'])
         start_jds.append(F[2]['start_time_jd'])
     logger.info(f'Backing up JDS {" ".join([str(int(jd)) for jd in jds_to_backup])}. Nfiles = {len(files)}, Total Size = {np.round(np.sum(sizes)/1e12,1)}TB')
-    def update_tape_usage(tapes,testing=False):
-        #input: dict  from query_tape_usage and a session for heratape db
-        #output: input dict with added key: usage (sum in bytes known to heratape for each tape)
-        for i in range(len(tapes)):
-            tapeusage = query_tape_usage(tapes[i]['tape_id'],testing=testing)
-            tapes[i]['usage'] =  tapeusage
-        return tapes
+#    def update_tape_usage(tapes,testing=False):
+#        #input: dict  from query_tape_usage and a session for heratape db
+#        #output: input dict with added key: usage (sum in bytes known to heratape for each tape)
+#        for i in range(len(tapes)):
+#            tapeusage = query_tape_usage(tapes[i]['tape_id'],testing=testing)
+#            tapes[i]['usage'] =  tapeusage
+#        return tapes
     def select_empty_tape(drive_id,testing=False):
         # Impliments tape selection logic
         # drive 1 uses tape slots 1-12, drive 2 uses 13-24
