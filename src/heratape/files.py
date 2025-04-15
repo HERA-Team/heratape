@@ -333,5 +333,5 @@ def update_tape_usage(tapes,testing=False):
     for i in range(len(tapes)):
         tapeusage = query_tape_usage(tapes[i]['tape_id'],testing=testing)
         tapes[i]['usage'] =  tapeusage
-   return tapes
+    return tapes
 
