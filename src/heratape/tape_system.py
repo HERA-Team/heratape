@@ -84,3 +84,10 @@ def update_tapes(testing=False):
     newtapes = [t for t in newtapes if not t.startswith('CLN')]
     print(f'adding {len(newtapes)} new tapes')
     add_new_tapes_to_db(newtapes)
+def check_drive_online(drivenum,testing=False):
+    with subprocess.Popen(f'sudo mt -f /dev/nst{drivenum} status', shell=True, stdout=subprocess.PIPE) as proc:
+        lines = proc.stdout.readlines()
+    for line in lines:
+        if 'ONLINE' in  line.decode('utf8'): return True
+    return False
+
