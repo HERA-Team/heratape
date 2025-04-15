@@ -13,7 +13,8 @@ from astropy.time import Time
 import sys,time
 from sqlalchemy.sql import func
 
-from heratape.tape_system import tape_in_drive,query_tape_jukebox,find_empty_slots,unload_tape,load_tape, update_tapes
+from heratape.tape_system import tape_in_drive,query_tape_jukebox,find_empty_slots,\
+        unload_tape,load_tape, update_tapes, check_drive_online
 
 
 import logging
