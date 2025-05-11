@@ -297,7 +297,7 @@ while(True):
                     if not online:
                         logger.info(f'drive {mydrive} tape {newtape_id} is calibrating. \
                         will wait 5 minutes and check again')
-                        sleep(60*5)
+                        time.sleep(60*5)
                     elif calibrating and online:
                         #indicates a change in state
                         logger.info(f'drive {mydrive} tape {newtape_id} NOW ONLINE')
