@@ -17,6 +17,7 @@ from heratape.tape_system import tape_in_drive,query_tape_jukebox,find_empty_slo
 import logging
 from systemd import journal
 
+from sqlalchemy.orm import Session 
 TESTING=True
 tapes = list_tapes_in_db(testing=TESTING)
 print("Tapes in DB")
