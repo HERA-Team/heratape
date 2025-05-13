@@ -18,13 +18,14 @@ import logging
 from systemd import journal
 
 from sqlalchemy.orm import Session 
+session = Session()
 TESTING=True
 tapes = list_tapes_in_db(testing=TESTING)
 print("Tapes in DB")
 print('Tape,   Usage TB (out of 18TB)')
 for tape in tapes:
     usage = query_tape_usage(tape)
-    with HTSessionWrapper(session=Session, testing=TESTING) as ht_sess:                                                       
+    with HTSessionWrapper(session=session, testing=TESTING) as ht_sess:                                                       
         jd_tuple_list = ht_sess.query(Files.jd).where(tape_id=tape).distinct().all()                                          
     jd_list = ','.join([str(val[0]) for val in jd_tuple_list])
     
