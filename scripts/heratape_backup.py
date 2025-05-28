@@ -58,7 +58,7 @@ logger = logging.getLogger('heratape-drive[{mydrive}]')
 logger.info("heratape_backup starting")   
 
 logger.info(f'using tape drive {mydrive}')
-logger.info('(tape 0 works on even JDs, 1 takes care off odd)')
+logger.info('drive 0 uses tapes in slots 0-11, drive 1 12-24  ')
 
 #accumulate 18TB worth of whole nights.
 #write them to a tape known to be blank
@@ -104,7 +104,7 @@ while(True):
         if len(jdbackup_list)==1: 
             jdbackup = jdbackup_list #special case for the LAST DAY to be backedup
             break
-        # drive 0 takes the even JDs, drive 1 the odd
+        # drive 0 uses tapes in slots 0-11, drive 1 12-24
         jdbackup_list = jdbackup_list[np.array(jdbackup_list,dtype=int)%(2+mydrive)==0]
         if len(jdbackup_list)<1: continue #this jd range is all DONE
         jdtobackup  = jdbackup_list[-1]#the most recent night waiting to be backed up
@@ -230,7 +230,7 @@ while(True):
         for tape in tape_archive:
             if tape['tape_id'].startswith('CLN'):continue#ignore the cleaner!
             logger.info(tape['usage'])
-            if tape['usage'] < TAPECAPACITY *0.5:
+            if tape['usage'] ==0: # The tar manual warns that only fools put multiple tars on one tape. only use empties
                 logger.info(tape['tape_id'])
                 if (int(tape['slot']) <= 12) == (drive_id==0): # slot<=12 and drive 0, or both opposite.
                     empty_tapes.append(tape)
