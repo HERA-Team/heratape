@@ -328,8 +328,19 @@ while(True):
     if  DOTAPE:
         logger.info(f'running tar: tar -cjf /dev/st{mydrive} -T {filelistfile}')
         tstart = time.time()
-        with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ', shell=True, stdout=subprocess.PIPE) as proc:                       
-                    lines = proc.stdout.readlines()
+        with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ', 
+            shell=True, 
+            stdout=subprocess.PIPE, stderr = subprocess.PIPE) as proc:
+
+                    stdout,stderr = proc.communicate()
+                    lines = stdout.decode().split()
+
+            if proc.returncode >0:
+                logger.error(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} exited with code {proc.returncode},
+                error follow')
+                logger.error(stderr)
+                sys.exit(proc.returncode)
+                
         logger.info(f'finished in {(time.time() - tstart)/60} minutes')
     else:
         logger.info(" TESTING MODE: skipping real tar to tape")
