@@ -27,7 +27,7 @@ def tape_in_drive(drivenum):
     assert(drivenum in [0,1])                                                                                              
     lines = run('sudo mtx -f /dev/sg25 status')
     for line in lines:                                                                                                      
-        l = line.decode('utf8')                                                                                         
+        l = line
         if l.startswith(f'Data Transfer Element {drivenum}'):                                                               
             return l.split('=')[1].strip()    
 def query_tape_jukebox():                                                                                                   
@@ -35,7 +35,7 @@ def query_tape_jukebox():
     lines = run('sudo mtx -f /dev/sg25 status')
     tapes = []                                                                                                              
     for line in lines:                                                                                                                                                                                                                                  
-        l = line.decode('utf8').strip()                                                                                     
+        l = line.strip()                                                                                     
         if l.startswith('Storage Element'):                                                                                                                                                                                                             
             if l.split(':')[1].strip().startswith('Empty'): continue                                                        
             slot = l.split(':')[0].split()[2]                                                                               
@@ -48,7 +48,7 @@ def find_empty_slots():
     lines = run('sudo mtx -f /dev/sg25 status')
     empty_slots = []                                                                                                                                                                                                                                    
     for line in lines:                                                                                                      
-        l = line.decode('utf8').strip()                                                                                     
+        l = line.strip()                                                                                     
         if l.endswith('Empty') and l.startswith('Storage'):          
             empty_slots.append(l.split(':')[0].split()[2])                                                                  
     return empty_slots                                                                                                      
@@ -69,7 +69,7 @@ def list_tapes_in_system():
     
     tapes = []
     for line in lines:
-        s = line.decode('utf8').split('=') 
+        s = line.split('=') 
         if len(s)<2:continue
         tapes.append(s[1].strip())
     return tapes
@@ -79,7 +79,7 @@ def tape_in_drive(drivenum):
     assert(drivenum in [0,1])
     lines - run('sudo mtx -f /dev/sg25 status')
     for line in lines:
-        s = line.decode('utf8')
+        s = line
         if s.startswith(f'Data Transfer Element {drivenum}'):
             return s.split('=')[1].strip()
     return None
@@ -100,6 +100,6 @@ def update_tapes(testing=False):
 def check_drive_online(drivenum,testing=False):
     lines = run(f'sudo mt -f /dev/nst{drivenum} status')
     for line in lines:
-        if 'ONLINE' in  line.decode('utf8'): return True
+        if 'ONLINE' in  line: return True
     return False
 
