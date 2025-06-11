@@ -1,15 +1,15 @@
 # script tool to help find files to backup
 # input range of JDs
-# output instance fully qualified paths 
+# output instance fully qualified paths
 import numpy as np
 from hera_librarian import LibrarianClient
-from heratape.base import get_heratape_testing_db                                                                           
+from heratape.base import get_heratape_testing_db
 from heratape.files import add_files_to_tape,Files,get_all_jds,\
     set_write_date,query_tape_usage,update_tape_usage,list_incomplete
-from heratape.tapes import Tapes                                                                                            
+from heratape.tapes import Tapes
 from heratape.base import HTSessionWrapper
 import subprocess,os
-from astropy.time import Time                                                                                               
+from astropy.time import Time
 import sys,time
 from sqlalchemy.sql import func
 
@@ -30,7 +30,7 @@ def find_dups(Xs):
         if x in seen: dups.append(x)
         else: seen.append(x)
     return dups
- #extract the lists metadata items 
+ #extract the lists metadata items
 
 
 jdskip_cache = '/users/djacobs/src/heratape/scripts/hera_jdskip_cache.txt'
@@ -40,22 +40,22 @@ DOTAPE = True
 TAPESIZE = 18e12
 
 local_client = LibrarianClient(LOCAL_CONN_NAME)
-mydrive = 0 # tape drive selector. 0 or 1. TODO make this set the oddness of the jd 
+mydrive = 0 # tape drive selector. 0 or 1. TODO make this set the oddness of the jd
 mydrive  = int(sys.argv[1])
-if not mydrive in [0,1]: 
+if not mydrive in [0,1]:
     logging.error('input tape drive must be 0 or 1')
     sys.exit(1)
 
-# some AI bullshyt                                                                                                          
-logging.basicConfig(                                                                                                        
-    level=logging.DEBUG if os.environ.get('LOG_LEVEL') == 'DEBUG' else logging.INFO,                                        
-    format='%(asctime)s - %(levelname)s - %(message)s'                                                                      
-)                                                                                                                           
-logger = logging.getLogger('heratape-drive[{mydrive}]')                 
-                                                                                                                            
-                                                                                                                            
-                                                                                                                            
-logger.info("heratape_backup starting")   
+# some AI bullshyt
+logging.basicConfig(
+    level=logging.DEBUG if os.environ.get('LOG_LEVEL') == 'DEBUG' else logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('heratape-drive[{mydrive}]')
+
+
+
+logger.info("heratape_backup starting")
 
 logger.info(f'using tape drive {mydrive}')
 logger.info('drive 0 uses tapes in slots 0-11, drive 1 12-24  ')
@@ -63,7 +63,7 @@ logger.info('drive 0 uses tapes in slots 0-11, drive 1 12-24  ')
 #accumulate 18TB worth of whole nights.
 #write them to a tape known to be blank
 # if interrupted, just try again
-# avoids writing multiple archives to a single tape, a practice which is avoided by seasoned veterans 
+# avoids writing multiple archives to a single tape, a practice which is avoided by seasoned veterans
 backupsize = 0 # tracks total size of planned backup, in bytes
 while(True):
     if backupsize ==0:
@@ -92,46 +92,46 @@ while(True):
         jdskip = []
 
     #dont add the JDs we're already backing up in this round
-    jdskip += jds_to_backup 
+    jdskip += jds_to_backup
 
     #work through priority ranges in chunks, don't assume chunks will come in time order
     #we might backup H1C and THEN go back to do the summers and other off season stuff
     jdtobackup = None
-    for jdrange in JD_priorities: 
+    for jdrange in JD_priorities:
         jdpriorities = np.arange(jdrange[0],jdrange[1])
         backedupjds = get_all_jds(testing=TESTING)
         jdbackup_list = np.array(list(sorted(list(set(jdpriorities) - set(backedupjds)-set(list(jdskip))))))
-        if len(jdbackup_list)==1: 
+        if len(jdbackup_list)==1:
             jdbackup = jdbackup_list #special case for the LAST DAY to be backedup
             break
         # drive 0 uses tapes in slots 0-11, drive 1 12-24
         jdbackup_list = jdbackup_list[np.array(jdbackup_list,dtype=int)%(2+mydrive)==0]
         if len(jdbackup_list)<1: continue #this jd range is all DONE
         jdtobackup  = jdbackup_list[-1]#the most recent night waiting to be backed up
-    if jdtobackup is None: 
+    if jdtobackup is None:
         logger.info(f'All data in the priority list {priority_list} has been backed up!')
         logger.info('Exiting')
         sys.exit() #TODO replace this with an infinite loop for daemon mode.
 
-    #check that the JD has not already been backed up                                                                       
-    backed_up_jds = get_all_jds(testing=TESTING)                                                                            
+    #check that the JD has not already been backed up
+    backed_up_jds = get_all_jds(testing=TESTING)
     if jdtobackup in backed_up_jds:
         logger.info(f'JD={jdtobackup} already backed up')
         open(jdskip_cache,'a').writelines([str(int(jdtobackup))+'\n'])
         continue
-        
+
 
     # next find out how much data is in this JD.
-    query = f'{{"start-time-jd-in-range": [{jdtobackup}, {jdtobackup+0.999}]}}'  
+    query = f'{{"start-time-jd-in-range": [{jdtobackup}, {jdtobackup+0.999}]}}'
     logger.info("using query: " + query)
     local_files = local_client.search_files(query)
     local_sizes = [entry["size"] for entry in local_files["results"]]
-    total_size = np.sum([e["size"] for e in local_files["results"]]) #size of selection in bytes                            
-    logger.info(f'Found {len(local_sizes)} files, total size {total_size/1e12:.2f}TB')    
-    if len(local_sizes)==0:                                                                              
-        logger.warn(f'no data found {np.round(jdtobackup)}. skipping!')                                                 
-        open(jdskip_cache,'a').writelines([str(int(jdtobackup))+'\n'])                                                  
-        continue            
+    total_size = np.sum([e["size"] for e in local_files["results"]]) #size of selection in bytes
+    logger.info(f'Found {len(local_sizes)} files, total size {total_size/1e12:.2f}TB')
+    if len(local_sizes)==0:
+        logger.warn(f'no data found {np.round(jdtobackup)}. skipping!')
+        open(jdskip_cache,'a').writelines([str(int(jdtobackup))+'\n'])
+        continue
 
 
     #add these files to the backup list and go back to data selection again.
@@ -148,17 +148,17 @@ while(True):
         # logger.info the gory details.
         local_names = [entry["name"] for entry in local_instances["results"]]
         logger.debug(f'there are {len(set(local_names))} unique file instances')
-        
-        #extract the lists metadata items 
+
+        #extract the lists metadata items
         local_paths = [entry["full_path_on_store"] for entry in local_instances["results"]]
         local_obsids = [entry["obsid"] for entry in local_files["results"]]
-        
-        
+
+
         logger.info(f'Found {len(local_names)} files, total size {total_size/1e12:.2f}TB')
         logger.debug('first 10 duplicates')
         for dup in find_dups(local_names)[:10]:
             logger.debug(dup)
-        
+
         # to build a record in heratape, we need information from Observations, Files, and Instances all zipped together
         # append to the running list of data we're going to backup
         # for each file, find one file instance, and find its matching observation info
@@ -238,11 +238,11 @@ while(True):
         usetape_id = sorted([t['tape_id'] for t in empty_tapes])[0]
         for tape in empty_tapes:
             if tape['tape_id'] == usetape_id:
-                return tape['slot'], tape['tape_id'], tape['usage'] 
+                return tape['slot'], tape['tape_id'], tape['usage']
         return None, None, None # if no tapes found, its probably time for a fresh batch of tapes!
-        
+
     #Armed with all our metadata from the Librarian, we can move to the Tape side of things
-    
+
     # prepare tape for backup
     drivetapeid = tape_in_drive(mydrive)
     logger.info(f'Drive {mydrive}, Tape {drivetapeid}')
@@ -251,11 +251,11 @@ while(True):
     if tape_usage >0:
         logger.info(f'Size of this backup = {np.sum(sizes)/1e12} TB is < the {(TAPESIZE - tape_usage)/1e12}TB theoretically remaining on the tape')
         logger.info('Load new tape')
-   
+
         #load a fresh tape
         #1 find an empty slot.  If there isn't one, we're done. Be ok if theres more than one
         empty_slots = find_empty_slots()
-        if len(empty_slots)==0: 
+        if len(empty_slots)==0:
             logger.info("ERROR: No empty slot into which I can unload a tape. The jukebox is too full! Remove a tape and try again.")
             sys.exit()
         #if theres more than one, choose the topmost empty slot
@@ -264,11 +264,11 @@ while(True):
         else:
             emptyslot = empty_slots[0]
         #unload working drive to this empty slot
-        logger.info(f'unloading tape {drivetapeid} from drive {mydrive} back to jukebox slot {emptyslot}') 
+        logger.info(f'unloading tape {drivetapeid} from drive {mydrive} back to jukebox slot {emptyslot}')
         unload_tape(mydrive,emptyslot)
         logger.info('tape unloaded')
         #select a fresh tape
-        #  this might require human intervention, which we pessimistically assume might be the case until 
+        #  this might require human intervention, which we pessimistically assume might be the case until
         #  proven otherwise
         waitingforhuman = True
         while(waitingforhuman):
@@ -328,8 +328,8 @@ while(True):
     if  DOTAPE:
         logger.info(f'running tar: tar -cjf /dev/st{mydrive} -T {filelistfile}')
         tstart = time.time()
-        with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ', 
-            shell=True, 
+        with subprocess.Popen(f'time tar -cf /dev/nst{mydrive} -T {filelistfile} ',
+            shell=True,
             stdout=subprocess.PIPE, stderr = subprocess.PIPE) as proc:
 
                     stdout,stderr = proc.communicate()
@@ -340,17 +340,17 @@ while(True):
                 error follow')
                 logger.error(stderr)
                 sys.exit(proc.returncode)
-                
+
         logger.info(f'finished in {(time.time() - tstart)/60} minutes')
     else:
         logger.info(" TESTING MODE: skipping real tar to tape")
         logger.debug(f' the tar command: time tar -cf /dev/nst{mydrive} -T {filelistfile}')
     if False:
         logger.error(f' A SIMULATED ERROR HAS OCCURRED. Like for example someone restarted the daemon during a tape write.')
-        sys.exit() 
-    
+        sys.exit()
+
     logger.info("files written OK")
-    
+
     logger.info("updating write date in db")
     file_bases = [os.path.basename(f) for f in files]
     set_write_date(file_bases,Time.now(),testing=TESTING)

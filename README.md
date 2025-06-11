@@ -11,26 +11,26 @@ This scheme is implemented by `heratape_backup.py <drivenum>`, for each drive.  
 
 If tape writing is interrupted the service will detect unfinished records next time it is run and alert the operator with a log message.  See `retry_failed_tape.py` to recover from this situation.
 
-The backup archive is tracked in a psql database called `heratape` on `herastore01`. The script connects to the Librarian to choose files to backup and get relevant metadata. `heratape` tables are described in the Files and Tapes modules in this repository. 
+The backup archive is tracked in a psql database called `heratape` on `herastore01`. The script connects to the Librarian to choose files to backup and get relevant metadata. `heratape` tables are described in the Files and Tapes modules in this repository.
 
 
-*Note that though there are 24 slots, there are only 22 tapes in it at any one time. One must stay empty and one holds a cleaner tape. With two tapes actually physically in the drive 
+*Note that though there are 24 slots, there are only 22 tapes in it at any one time. One must stay empty and one holds a cleaner tape. With two tapes actually physically in the drive
 
-# heratape_backup.py  
+# heratape_backup.py
 Designed to run as a service, run one for each tape drive.  Assumes two tape drives, with 0 backing up even days and 1 backing up odd.
 Builds a set of files that will fit on a tape and then finds an empty tape and writes them.
-Saves the records to the heratape db before writing with a blank write date and then sets the date once finished writing. 
+Saves the records to the heratape db before writing with a blank write date and then sets the date once finished writing.
 
 
 # retry_failed_tape.py
 Clean up files that have no write_date. Make sure heratape_backup services are active when running this! Hopefully isn't needed very often.
 
-If the write is interrupted, the date will be None.   At the start, heratape_backup checks for records with no date and halts if it finds any.  The expectation is that the write got interrupted somewhere in the middle. Run "retry_failed_tape.py" to fix this.  Requires operator to manually load the tape to be retried into the drive and rewind it. Use caution! Once rewound a tape can be overwritten. 
+If the write is interrupted, the date will be None.   At the start, heratape_backup checks for records with no date and halts if it finds any.  The expectation is that the write got interrupted somewhere in the middle. Run "retry_failed_tape.py" to fix this.  Requires operator to manually load the tape to be retried into the drive and rewind it. Use caution! Once rewound a tape can be overwritten.
 
 # drives
 herastore01 has two drives
 `/dev/nst0` and `/dev/nst1`
-Thge changer is 
+Thge changer is
 `/dev/sg25`
 
 

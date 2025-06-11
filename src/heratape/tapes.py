@@ -173,22 +173,26 @@ def update_tape(
     stmt = update(Tapes).where(Tapes.tape_id == tape_id).values(**update_vals)
     with HTSessionWrapper(session=session, testing=testing) as ht_sess:
         ht_sess.execute(stmt)
+
+
 def list_tapes_in_db(testing=False):
-    #get a list of tapes already known to heratape db
-    with HTSessionWrapper(testing=testing) as ht_sess:                                
-        tapes= ht_sess.query(Tapes).all()
+    # get a list of tapes already known to heratape db
+    with HTSessionWrapper(testing=testing) as ht_sess:
+        tapes = ht_sess.query(Tapes).all()
         return [t.tape_id for t in tapes]
-def add_new_tapes_to_db(tapes,testing=False):
-    #input a list of tape names, eg as output by list_tapes_in_system
-    #tapes will be added to tape table in heratape db
+
+
+def add_new_tapes_to_db(tapes, testing=False):
+    # input a list of tape names, eg as output by list_tapes_in_system
+    # tapes will be added to tape table in heratape db
     # then they will be ready for use by the backup service
     # return 0 on success
     addcount = 0
-    added  = []
+    added = []
     for tape in tapes:
         add_tape(
             tape_id=tape,
-            tape_type='lto9',
+            tape_type="lto9",
             size=1.8e13,
             purchase_date=Time.now(),
             testing=testing,
