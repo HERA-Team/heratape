@@ -1,0 +1,10 @@
+name: heratape
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - python-systemd
+  - ipython
+  - pip:
+    - git+https://github.com/HERA-Team/librarian.git
